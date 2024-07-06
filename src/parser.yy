@@ -88,7 +88,7 @@ program:
 |  top ";" program      { $$ = new SeqAST($1,$3); };
 
 top:
-%empty                  { $$ = nullptr; }
+  %empty                { $$ = nullptr; }
 | definition            { $$ = $1; }
 | external              { $$ = $1; };
 
@@ -103,7 +103,8 @@ proto:
 
 idseq:
   %empty                { std::vector<std::string> args;
-                         $$ = args; }
+                          $$ = args;
+                        }
 | "id" idseq            { $2.insert($2.begin(),$1); $$ = $2; };
 
 %left ":";
@@ -128,7 +129,8 @@ blockexp:
 vardefs:
   binding                 { std::vector<VarBindingAST*> definitions;
                             definitions.push_back($1);
-                            $$ = definitions; }
+                            $$ = definitions;
+                          }
 | vardefs ";" binding     { $1.push_back($3);
                             $$ = $1; }
                             
@@ -148,19 +150,19 @@ idexp:
 
 optexp:
   %empty                { std::vector<ExprAST*> args;
-			 $$ = args; }
+			                    $$ = args;
+                        }
 | explist               { $$ = $1; };
 
 explist:
   exp                   { std::vector<ExprAST*> args;
-                         args.push_back($1);
-			 $$ = args;
+                          args.push_back($1);
+			                    $$ = args;
                         }
 | exp "," explist       { $3.insert($3.begin(), $1); $$ = $3; };
  
 %%
 
-void yy::parser::error(const location_type  l, const std::string &m)
-{
+void yy::parser::error(const location_type &l, const std::string &m) {
   std::cerr << l << ": " << m << '\n';
 }
