@@ -21,6 +21,7 @@
   class PrototypeAST;
   class BlockExprAST;
   class VarBindingAST;
+  class GlobalVarAST;
 }
 
 %param { driver& drv }
@@ -55,6 +56,7 @@
   EXTERN     "extern"
   DEF        "def"
   VAR        "var"
+  GLOBAL     "global"
 ;
 
 %token <std::string> IDENTIFIER "id"
@@ -74,7 +76,7 @@
 %type <BlockExprAST*> blockexp
 %type <std::vector<VarBindingAST*>> vardefs
 %type <VarBindingAST*> binding
-
+%type <GlobalVarAST*> globalvar
 
 %%
 
@@ -89,14 +91,18 @@ program:
 
 top:
   %empty                { $$ = nullptr; }
-| definition            { $$ = $1; }
-| external              { $$ = $1; };
+| globalvar             { $$ = $1; }
+| external              { $$ = $1; }
+| definition            { $$ = $1; };
 
-definition:
-  "def" proto exp       { $$ = new FunctionAST($2,$3); $2->noemit(); };
+globalvar:
+  "global" "id"         { $$ = new GlobalVarAST($2); };
 
 external:
   "extern" proto        { $$ = $2; };
+
+definition:
+  "def" proto exp       { $$ = new FunctionAST($2,$3); $2->noemit(); };
 
 proto:
   "id" "(" idseq ")"    { $$ = new PrototypeAST($1,$3);  };

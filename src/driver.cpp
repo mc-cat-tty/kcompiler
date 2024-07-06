@@ -104,9 +104,15 @@ lexval VariableExprAST::getLexVal() const {
 // il nome del registro in cui verrà trasferito il valore dalla memoria
 Value *VariableExprAST::codegen(driver& drv) {
   AllocaInst *A = drv.NamedValues[Name];
-  if (!A)
+  GlobalVariable *G = module->getNamedGlobal(Name);
+
+  if (!A and !G)
      return LogErrorV("Variabile "+Name+" non definita");
-  return builder->CreateLoad(A->getAllocatedType(), A, Name.c_str());
+  
+  Value *V;
+  
+  if (G) return builder->CreateLoad(G->getValueType(), G, Name.c_str());
+  if (A) return builder->CreateLoad(A->getType(), A, Name.c_str());
 }
 
 /******************** Binary Expression Tree **********************/
@@ -474,3 +480,17 @@ Function *FunctionAST::codegen(driver& drv) {
   return nullptr;
 };
 
+GlobalVariable* GlobalVarAST::codegen(driver &drv) {
+  auto *globalVar = new GlobalVariable(
+    *module,
+    Type::getDoubleTy(*context),
+    false,  // Not constant
+    GlobalValue::LinkageTypes::CommonLinkage,
+    ConstantFP::getNullValue(Type::getDoubleTy(*context)),
+    name
+  );
+
+  globalVar->print(errs()); errs() << "\n";
+
+  return globalVar;
+};

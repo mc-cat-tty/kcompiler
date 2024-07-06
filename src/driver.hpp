@@ -11,6 +11,8 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
+#include "llvm/IR/GlobalValue.h"
+#include "llvm/IR/GlobalVariable.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -163,6 +165,17 @@ private:
 public:
   FunctionAST(PrototypeAST* Proto, ExprAST* Body);
   Function *codegen(driver& drv) override;
+};
+
+// Global variable declaration
+class GlobalVarAST : public RootAST {
+private:
+  std::string name;
+
+public:
+  GlobalVarAST(const std::string &name) : name(name) {};
+  GlobalVariable* codegen(driver &d) override;
+  std::string getName() const { return name; };
 };
 
 #endif // ! DRIVER_HH
