@@ -1,4 +1,4 @@
-%skeleton "lalr1.cc" /* -*- C++ -*- */
+%skeleton "lalr1.cc"
 %require "3.2"
 %defines
 
@@ -8,7 +8,7 @@
 %define parse.assert
 
 %code requires {
-  # include <string>
+  #include <string>
   #include <exception>
   class driver;
   class RootAST;
@@ -23,7 +23,6 @@
   class VarBindingAST;
 }
 
-// The parsing context.
 %param { driver& drv }
 
 %locations
@@ -78,10 +77,11 @@
 
 
 %%
+
 %start startsymb;
 
 startsymb:
-program                 { drv.root = $1; }
+  program                 { drv.root = $1; }
 
 program:
   %empty                { $$ = new SeqAST(nullptr,nullptr); }
@@ -160,8 +160,7 @@ explist:
  
 %%
 
-void
-yy::parser::error (const location_type& l, const std::string& m)
+void yy::parser::error(const location_type  l, const std::string &m)
 {
   std::cerr << l << ": " << m << '\n';
 }

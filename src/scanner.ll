@@ -1,4 +1,4 @@
-%{ /* -*- C++ -*- */
+%{
 # include <cerrno>
 # include <climits>
 # include <cstdlib>
@@ -17,19 +17,18 @@ num     {fpnum}|{fixnum}
 blank   [ \t]
 
 %{
-  // Codice eseguito ad ogni match con una regexp
+  // Code executed at every regex match:
   # define YY_USER_ACTION loc.columns(yyleng);
 %}
+
 %%
+
 %{
-  // La location è memorizzata nel driver ma è utile
-  // potervi fare riferimento in modo più succinto
-  // con una variabile locale
+  // Every time yylex is called:
   yy::location& loc = drv.location;
-  
-  // Codice eseguito ogni volta che yylex viene chiamata
   loc.step ();
 %}
+
 {blank}+   loc.step ();
 [\n]+      loc.lines (yyleng); loc.step ();
 
@@ -68,21 +67,18 @@ blank   [ \t]
          }
          
 <<EOF>>  { return yy::parser::make_END (loc); }
+
 %%
 
 void driver::scan_begin () {
   yy_flex_debug = trace_scanning;
-  if (file.empty () || file == "-")
-    yyin = stdin;
-  else if (!(yyin = fopen (file.c_str (), "r")))
-    {
-      std::cerr << "cannot open " << file << ": " << strerror(errno) << '\n';
-      exit (EXIT_FAILURE);
-    }
+  if (file.empty() || file == "-") yyin = stdin;
+  else if (!(yyin = fopen (file.c_str(), "r"))) {
+    std::cerr << "cannot open " << file << ": " << strerror(errno) << '\n';
+    exit (EXIT_FAILURE);
+  }
 }
 
-void
-driver::scan_end ()
-{
+void driver::scan_end() {
   fclose (yyin);
 }
