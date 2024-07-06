@@ -8,12 +8,13 @@ all:
 
 clean:
 	+$(MAKE) -C src clean
-	rm kcomp
+	rm -f kcomp
 
 test: all
 	./kcomp test/$(testname).k 2> $(testname).ll
 	clang++ -o $(testname) $(testname).ll test/call$(testname).cpp
 	./$(testname)
+	rm -f $(testname) $(testname).ll
 
 %::
 	@true
