@@ -486,7 +486,7 @@ GlobalVariable* GlobalVarAST::codegen(driver &drv) {
     Type::getDoubleTy(*context),
     false,  // Not constant
     GlobalValue::LinkageTypes::CommonLinkage,
-    ConstantFP::getNullValue(Type::getDoubleTy(*context)),
+    ConstantFP::getZero(Type::getDoubleTy(*context)),
     name
   );
 
