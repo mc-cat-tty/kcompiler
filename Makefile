@@ -1,4 +1,6 @@
-.PHONY: all
+.PHONY: all clean test
+
+testname := $(wordlist 2, 2, $(MAKECMDGOALS))
 
 all:
 	+$(MAKE) -C src
@@ -7,3 +9,11 @@ all:
 clean:
 	+$(MAKE) -C src clean
 	rm kcomp
+
+test: all
+	./kcomp test/$(testname).k 2> $(testname).ll
+	clang++ -o $(testname) $(testname).ll test/call$(testname).cpp
+	./$(testname)
+
+%::
+	@true
