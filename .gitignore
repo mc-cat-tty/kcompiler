@@ -2,6 +2,9 @@ kcomp
 parser.hpp
 parser.cpp
 scanner.cpp
+.DS_Store
+
+*.out
 *.a
 *.o
 *.bc
