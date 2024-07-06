@@ -1,5 +1,6 @@
 kcomp
-scanner.{cpp,hpp}
-parser.{cpp,hpp}
+parser.hpp
+parser.cpp
+scanner.cpp
 *.a
 *.o
