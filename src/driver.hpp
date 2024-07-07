@@ -184,8 +184,8 @@ private:
   ExprAST *val;
 
 public:
-  AssignmentExprAST(const std::string &name, ExprAST *val)
-    : name(name), val(val) {};
+  AssignmentExprAST(const std::string &name, ExprAST *val) :
+    name(name), val(val) {};
   Value* codegen(driver &d) override;
   std::string getName() const { return name; };
 };
