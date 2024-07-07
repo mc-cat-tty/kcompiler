@@ -62,7 +62,7 @@ Value *VariableExprAST::codegen(driver& drv) {
   if (not maybeSymbol) return nullptr;
 
   auto symbol = *maybeSymbol;
-  if (auto *A = std::get_if<AllocaInst*>(&symbol)) return builder->CreateLoad((*A)->getType(), *A, Name.c_str());
+  if (auto *A = std::get_if<AllocaInst*>(&symbol)) return builder->CreateLoad((*A)->getAllocatedType(), *A, Name.c_str());
   if (auto *G = std::get_if<GlobalVariable*>(&symbol)) return builder->CreateLoad((*G)->getValueType(), *G, Name.c_str());
 
   return nullptr;
@@ -211,15 +211,18 @@ const std::string& VarBindingAST::getName() const {
 
 AllocaInst* VarBindingAST::codegen(driver& drv) {
   // Get current function to allocate memory in its activation record
-   Function *fun = builder->GetInsertBlock()->getParent();
-   Value *BoundVal = Val->codegen(drv);  // Generate value
-   if (!BoundVal)
-      return nullptr;
+  Function *fun = builder->GetInsertBlock()->getParent();
 
-   AllocaInst *Alloca = CreateEntryBlockAlloca(fun, Name);
-   builder->CreateStore(BoundVal, Alloca);
-   
-   return Alloca;
+  // Bindings without rhs can exist in order to shadow global vars
+  if (not Val) Val = new NumberExprAST(0);
+
+  Value *BoundVal = Val->codegen(drv);  // Generate value
+  if (!BoundVal) return nullptr;
+
+  AllocaInst *Alloca = CreateEntryBlockAlloca(fun, Name);
+  builder->CreateStore(BoundVal, Alloca);
+  
+  return Alloca;
 };
 
 
