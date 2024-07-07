@@ -1,6 +1,13 @@
 #ifndef DRIVER_HPP
 #define DRIVER_HPP
 
+#include <cstdio>
+#include <cstdlib>
+#include <map>
+#include <string>
+#include <vector>
+#include <variant>
+
 #include "llvm/ADT/APFloat.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Constants.h"
@@ -13,13 +20,6 @@
 #include "llvm/IR/Verifier.h"
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/GlobalVariable.h"
-
-#include <cstdio>
-#include <cstdlib>
-#include <map>
-#include <string>
-#include <vector>
-#include <variant>
 
 #include "parser.hpp"
 

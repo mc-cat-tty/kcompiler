@@ -1,19 +1,10 @@
 #include "driver.hpp"
 #include "parser.hpp"
+#include "utils.hpp"
 
 LLVMContext *context = new LLVMContext;
 Module *module = new Module("Kaleidoscope", *context);
 IRBuilder<> *builder = new IRBuilder(*context);
-
-Value *LogErrorV(const std::string Str) {
-  std::cerr << Str << std::endl;
-  return nullptr;
-}
-
-static AllocaInst *CreateEntryBlockAlloca(Function *fun, StringRef VarName) {
-  IRBuilder<> TmpB(&fun->getEntryBlock(), fun->getEntryBlock().begin());
-  return TmpB.CreateAlloca(Type::getDoubleTy(*context), nullptr, VarName);
-}
 
 driver::driver(): trace_parsing(false), trace_scanning(false) {};
 
@@ -67,16 +58,12 @@ lexval VariableExprAST::getLexVal() const {
 
 // Notice that NamedValues is the locally-defined symbol table
 Value *VariableExprAST::codegen(driver& drv) {
-  AllocaInst *A = drv.NamedValues[Name];
-  GlobalVariable *G = module->getNamedGlobal(Name);
+  auto maybeSymbol = tryGetSymbol(drv, Name);
+  if (not maybeSymbol) return nullptr;
 
-  if (!A and !G)
-    return LogErrorV("Variabile "+Name+" non definita");
-  
-  Value *V;
-  
-  if (G) return builder->CreateLoad(G->getValueType(), G, Name.c_str());
-  if (A) return builder->CreateLoad(A->getType(), A, Name.c_str());
+  auto symbol = *maybeSymbol;
+  if (auto *A = std::get_if<AllocaInst*>(&symbol)) return builder->CreateLoad((*A)->getType(), *A, Name.c_str());
+  if (auto *G = std::get_if<GlobalVariable*>(&symbol)) return builder->CreateLoad((*G)->getValueType(), *G, Name.c_str());
 
   return nullptr;
 }
@@ -333,5 +320,20 @@ GlobalVariable* GlobalVarAST::codegen(driver &drv) {
 
 
 Value* AssignmentExprAST::codegen(driver &drv) {
-  
+  auto maybeSymbol = tryGetSymbol(drv, name);
+  if (not maybeSymbol) return nullptr;
+  auto symbol = *maybeSymbol;
+
+  Value *v = val->codegen(drv);
+  if (not v) return nullptr;
+
+  if (auto *A = std::get_if<AllocaInst*>(&symbol)) {
+    builder->CreateStore(v, *A);
+    return v;
+  }
+
+  if (auto *G = std::get_if<GlobalVariable*>(&symbol)) {
+    builder->CreateStore(v, *G);
+    return v;
+  }
 }

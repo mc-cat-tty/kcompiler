@@ -7,5 +7,6 @@ extern "C" {
 
 int main() {
   GLOBAL = 20;
-  std::cout << f() << std::endl;
+  std::cout << "f(): " << f() << std::endl;
+  std::cout << "GLOBAL: " << GLOBAL << std::endl;
 }
