@@ -66,6 +66,7 @@ public:
 
 
 class ExprAST : public RootAST {};
+class InitAST : public RootAST {};
 
 class NumberExprAST : public ExprAST {
 private:
@@ -128,7 +129,7 @@ public:
   Value *codegen(driver& drv) override;
 };
 
-class VarBindingAST: public RootAST {
+class VarBindingAST: public InitAST {
 private:
   const std::string Name;
   ExprAST* Val;
@@ -178,7 +179,7 @@ public:
   std::string getName() const { return name; };
 };
 
-class AssignmentExprAST : public ExprAST {
+class AssignmentExprAST : public ExprAST, public InitAST {
 private:
   std::string name;
   ExprAST *val;
@@ -188,6 +189,17 @@ public:
     name(name), val(val) {};
   Value* codegen(driver &d) override;
   std::string getName() const { return name; };
+};
+
+class ForExprAST : public ExprAST {
+private:
+  InitAST *init;
+  ExprAST *cond, *body;
+  AssignmentExprAST *assignment;
+
+public:
+  ForExprAST(InitAST *init, ExprAST *cond, AssignmentExprAST *assignment, ExprAST *body) :
+    init(init), cond(cond), assignment(assignment), body(body) {};
 };
 
 #endif // ! DRIVER_HH

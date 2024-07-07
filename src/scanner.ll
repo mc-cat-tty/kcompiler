@@ -60,6 +60,9 @@ blank   [ \t]
 "extern" { return yy::parser::make_EXTERN(loc); }
 "var"    { return yy::parser::make_VAR(loc); }
 "global" { return yy::parser::make_GLOBAL(loc); }
+"if"     { return yy::parser::make_IF(loc); }
+"else"   { return yy::parser::make_ELSE(loc); }
+"for"    { return yy::parser::make_FOR(loc); }
 
 {id}     { return yy::parser::make_IDENTIFIER (yytext, loc); }
 
