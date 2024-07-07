@@ -21,10 +21,15 @@ extern LLVMContext *context;
 extern Module *module;
 extern IRBuilder<> *builder;
 
+Value *logError(const std::string msg, const driver& drv) {
+  std::cout
+    << drv.file.c_str()
+    << ":" << std::to_string(drv.location.begin.line)
+    << ":" << std::to_string(drv.location.begin.column)
+    << ": " << msg
+    << std::endl;
 
-Value *LogErrorV(const std::string Str) {
-  std::cerr << Str << std::endl;
-  return nullptr;
+  exit(1);
 }
 
 static AllocaInst *CreateEntryBlockAlloca(Function *fun, StringRef VarName) {
@@ -41,7 +46,7 @@ MaybeSymbol tryGetSymbol(driver &drv, const std::string &name) {
   GlobalVariable *G = module->getNamedGlobal(name);
 
   if (!A and !G) {
-    LogErrorV("Variabile " + name + " non definita");
+    logError("Variabile " + name + " non definita", drv);
     return std::nullopt;
   }
 

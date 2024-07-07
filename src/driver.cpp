@@ -92,7 +92,7 @@ Value *BinaryExprAST::codegen(driver& drv) {
     return builder->CreateFCmpUEQ(L,R,"eqtest");
   default:  
     std::cout << Op << std::endl;
-    return LogErrorV("Operatore binario non supportato");
+    return logError("Operatore binario non supportato", drv);
   }
 };
 
@@ -108,10 +108,10 @@ lexval CallExprAST::getLexVal() const {
 Value* CallExprAST::codegen(driver& drv) {
   Function *CalleeF = module->getFunction(Callee);
   if (!CalleeF)  // Function existance check
-    return LogErrorV("Funzione non definita");
+    return logError("Funzione non definita", drv);
 
   if (CalleeF->arg_size() != Args.size())  // Params number check
-    return LogErrorV("Numero di argomenti non corretto");
+    return logError("Numero di argomenti non corretto", drv);
 
   std::vector<Value *> ArgsV;
   for (auto arg : Args) {
@@ -133,11 +133,12 @@ Value* IfExprAST::codegen(driver& drv) {
   
   Function *function = builder->GetInsertBlock()->getParent();
   BasicBlock *TrueBB =  BasicBlock::Create(*context, "trueexp", function);
-  BasicBlock *FalseBB = BasicBlock::Create(*context, "falseexp");
+  BasicBlock *FalseBB;
+  if (FalseExp) FalseBB = BasicBlock::Create(*context, "falseexp");
   BasicBlock *MergeBB = BasicBlock::Create(*context, "endcond");
   // False and Merge BB are not inserted yet because True BB could contains multiple blocks
   
-  builder->CreateCondBr(CondV, TrueBB, FalseBB);
+  builder->CreateCondBr(CondV, TrueBB, FalseExp ? FalseBB : MergeBB);
   
   builder->SetInsertPoint(TrueBB);
   Value *TrueV = TrueExp->codegen(drv);
@@ -149,22 +150,27 @@ Value* IfExprAST::codegen(driver& drv) {
   // so get a feedback about current block
   TrueBB = builder->GetInsertBlock();
 
-  function->insert(function->end(), FalseBB);
-  builder->SetInsertPoint(FalseBB);
-  
-  Value *FalseV = FalseExp->codegen(drv);
-  if (!FalseV)
+  Value *FalseV;
+  if (FalseExp) {
+    function->insert(function->end(), FalseBB);
+    builder->SetInsertPoint(FalseBB);
+    FalseV = FalseExp->codegen(drv);
+    if (!FalseV)
       return nullptr;
-  builder->CreateBr(MergeBB);  // Inconditionally branch to MergeBB
-  
-  FalseBB = builder->GetInsertBlock();  // Get FalseBB position feedback
-  
+    
+    builder->CreateBr(MergeBB);  // Inconditionally branch to MergeBB
+    FalseBB = builder->GetInsertBlock();  // Get FalseBB position feedback
+    
+  }
+
   function->insert(function->end(), MergeBB);
   builder->SetInsertPoint(MergeBB);
   PHINode *PN = builder->CreatePHI(Type::getDoubleTy(*context), 2, "condval");
   PN->addIncoming(TrueV, TrueBB);
-  PN->addIncoming(FalseV, FalseBB);
-  return PN;
+  if (FalseExp) PN->addIncoming(FalseV, FalseBB);
+
+  if (FalseExp) return PN;
+  else return nullptr;
 };
 
 
@@ -190,8 +196,10 @@ Value* BlockExprAST::codegen(driver& drv) {
   };
 
   Value *blockvalue = Seq->codegen(drv);
-  if (!blockvalue)
+  if (!blockvalue) {
+    logError("Invalid or uncomplete expression", drv);
     return nullptr;
+  }
 
 // Previous scope is restored
   for (int i=0; auto &def : Def) {
