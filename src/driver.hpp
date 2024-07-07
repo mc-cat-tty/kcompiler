@@ -122,9 +122,9 @@ public:
 class BlockExprAST : public ExprAST {
 private:
   std::vector<VarBindingAST*> Def;
-  ExprAST* Val;
+  SeqAST* Seq;
 public:
-  BlockExprAST(std::vector<VarBindingAST*> Def, ExprAST* Val);
+  BlockExprAST(std::vector<VarBindingAST*> Def, SeqAST* Seq);
   Value *codegen(driver& drv) override;
 };
 
@@ -175,6 +175,18 @@ private:
 public:
   GlobalVarAST(const std::string &name) : name(name) {};
   GlobalVariable* codegen(driver &d) override;
+  std::string getName() const { return name; };
+};
+
+class AssignmentExprAST : public ExprAST {
+private:
+  std::string name;
+  ExprAST *val;
+
+public:
+  AssignmentExprAST(const std::string &name, ExprAST *val)
+    : name(name), val(val) {};
+  Value* codegen(driver &d) override;
   std::string getName() const { return name; };
 };
 

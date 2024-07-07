@@ -58,13 +58,11 @@ SeqAST::SeqAST(RootAST* first, RootAST* continuation):
 // mediante chiamate ricorsive viene generato il codice di first e 
 // poi quello di continuation (con gli opportuni controlli di "esistenza")
 Value *SeqAST::codegen(driver& drv) {
-  if (first != nullptr) {
-    Value *f = first->codegen(drv);
-  } else {
-    if (continuation == nullptr) return nullptr;
-  }
-  Value *c = continuation->codegen(drv);
-  return nullptr;
+  Value *v = nullptr;
+  
+  if (first) v = first->codegen(drv);
+  if (continuation) v = continuation->codegen(drv);
+  return v;
 };
 
 /********************* Number Expression Tree *********************/
@@ -113,6 +111,8 @@ Value *VariableExprAST::codegen(driver& drv) {
   
   if (G) return builder->CreateLoad(G->getValueType(), G, Name.c_str());
   if (A) return builder->CreateLoad(A->getType(), A, Name.c_str());
+
+  return nullptr;
 }
 
 /******************** Binary Expression Tree **********************/
@@ -271,8 +271,8 @@ Value* IfExprAST::codegen(driver& drv) {
 };
 
 /********************** Block Expression Tree *********************/
-BlockExprAST::BlockExprAST(std::vector<VarBindingAST*> Def, ExprAST* Val): 
-         Def(std::move(Def)), Val(Val) {};
+BlockExprAST::BlockExprAST(std::vector<VarBindingAST*> Def, SeqAST* Seq): 
+         Def(std::move(Def)), Seq(Seq) {};
 
 Value* BlockExprAST::codegen(driver& drv) {
    // Un blocco è un'espressione preceduta dalla definizione di una o più variabili locali.
@@ -313,9 +313,9 @@ Value* BlockExprAST::codegen(driver& drv) {
    // Ora (ed è la parte più "facile" da capire) viene generato il codice che
    // valuta l'espressione. Eventuali riferimenti a variabili vengono risolti
    // nella symbol table appena modificata
-   Value *blockvalue = Val->codegen(drv);
-      if (!blockvalue)
-         return nullptr;
+   Value *blockvalue = Seq->codegen(drv);
+    if (!blockvalue)
+      return nullptr;
    // Prima di uscire dal blocco, si ripristina lo scope esterno al costrutto
    for (int i=0, e=Def.size(); i<e; i++) {
         drv.NamedValues[Def[i]->getName()] = AllocaTmp[i];
@@ -494,3 +494,7 @@ GlobalVariable* GlobalVarAST::codegen(driver &drv) {
 
   return globalVar;
 };
+
+Value* AssignmentExprAST::codegen(driver &drv) {
+  return nullptr;
+}
