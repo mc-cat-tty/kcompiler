@@ -175,7 +175,7 @@ private:
 
 public:
   GlobalVarAST(const std::string &name) : name(name) {};
-  GlobalVariable* codegen(driver &d) override;
+  GlobalVariable* codegen(driver &drv) override;
   std::string getName() const { return name; };
 };
 
@@ -187,7 +187,7 @@ private:
 public:
   AssignmentExprAST(const std::string &name, ExprAST *val) :
     name(name), val(val) {};
-  Value* codegen(driver &d) override;
+  Value* codegen(driver &drv) override;
   std::string getName() const { return name; };
 };
 
@@ -200,6 +200,7 @@ private:
 public:
   ForExprAST(InitAST *init, ExprAST *cond, AssignmentExprAST *assignment, ExprAST *body) :
     init(init), cond(cond), assignment(assignment), body(body) {};
+  Value* codegen(driver &d) override;
 };
 
 #endif // ! DRIVER_HH

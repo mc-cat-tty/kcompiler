@@ -165,12 +165,15 @@ Value* IfExprAST::codegen(driver& drv) {
 
   function->insert(function->end(), MergeBB);
   builder->SetInsertPoint(MergeBB);
-  PHINode *PN = builder->CreatePHI(Type::getDoubleTy(*context), 2, "condval");
-  PN->addIncoming(TrueV, TrueBB);
-  if (FalseExp) PN->addIncoming(FalseV, FalseBB);
-
-  if (FalseExp) return PN;
-  else return nullptr;
+  
+  if (FalseExp) {
+    PHINode *PN = builder->CreatePHI(Type::getDoubleTy(*context), 2, "condval");
+    PN->addIncoming(TrueV, TrueBB);
+    if (FalseExp) PN->addIncoming(FalseV, FalseBB);
+    return PN;
+  }
+  
+  return UndefValue::get(Type::getDoubleTy(*context));
 };
 
 
@@ -196,9 +199,13 @@ Value* BlockExprAST::codegen(driver& drv) {
   };
 
   Value *blockvalue = Seq->codegen(drv);
+  
   if (!blockvalue) {
-    logError("Invalid or uncomplete expression", drv);
-    return nullptr;
+    return logError("Invalid block sequence", drv);
+  }
+
+  if (isa<UndefValue>(blockvalue)) {
+    logWarning("Uncomplete or invalid block expression. Expanding as undef.", drv);
   }
 
 // Previous scope is restored
@@ -347,4 +354,11 @@ Value* AssignmentExprAST::codegen(driver &drv) {
     builder->CreateStore(v, *G);
     return v;
   }
+
+  return nullptr;
+}
+
+Value* ForExprAST::codegen(driver &drv) {
+  
+  return nullptr;
 }

@@ -21,7 +21,7 @@ extern LLVMContext *context;
 extern Module *module;
 extern IRBuilder<> *builder;
 
-Value *logError(const std::string msg, const driver& drv) {
+Value *logWarning(const std::string msg, const driver& drv) {
   std::cout
     << drv.file.c_str()
     << ":" << std::to_string(drv.location.begin.line)
@@ -29,6 +29,12 @@ Value *logError(const std::string msg, const driver& drv) {
     << ": " << msg
     << std::endl;
 
+  return nullptr;
+}
+
+Value *logError(const std::string msg, const driver& drv) {
+  std::cout << "Error: ";
+  logWarning(msg, drv);
   exit(1);
 }
 
@@ -45,11 +51,9 @@ MaybeSymbol tryGetSymbol(driver &drv, const std::string &name) {
   AllocaInst *A = drv.NamedValues[name];
   GlobalVariable *G = module->getNamedGlobal(name);
 
-  if (!A and !G) {
-    logError("Variabile " + name + " non definita", drv);
-    return std::nullopt;
-  }
-
   if (A) return A;
   if (G) return G;
+
+  logError("Variabile " + name + " non definita", drv);
+  return std::nullopt;
 }
