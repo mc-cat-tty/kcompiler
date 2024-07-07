@@ -24,6 +24,7 @@
   class GlobalVarAST;
   class AssignmentExprAST;
   class ForExprAST;
+  class IfExprAST;
   class InitAST;
 }
 
@@ -69,7 +70,7 @@
 %token <double> NUMBER "number"
 %type <ExprAST*> exp
 %type <ExprAST*> idexp
-%type <ExprAST*> expif
+%type <IfExprAST*> expif
 %type <ExprAST*> condexp
 %type <std::vector<ExprAST*>> optexp
 %type <std::vector<ExprAST*>> explist
@@ -89,8 +90,8 @@
 %type <ExprAST*> stmt
 %type <SeqAST*> stmts
 %type <InitAST*> init
-%type <ExprAST*> ifstmt
-%type <ExprAST*> forstmt
+%type <IfExprAST*> ifstmt
+%type <ForExprAST*> forstmt
 %%
 
 %start startsymb;
