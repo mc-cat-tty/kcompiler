@@ -254,12 +254,6 @@ AllocaInst* VarBindingAST::codegen(driver& drv) {
     builder->CreateStore(BoundVal, Alloca);
   }
   else {  // Array
-    // Error checking
-    if (Size != Vals.size()) {
-      logWarning("Mismatching array and initializer list size", drv);
-      return nullptr;
-    }
-    
     auto *arrayType = ArrayType::get(Type::getDoubleTy(*context), Size);
     Alloca = CreateEntryBlockAlloca(
       fun,
