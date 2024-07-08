@@ -218,7 +218,7 @@ Value* BlockExprAST::codegen(driver& drv) {
 VarBindingAST::VarBindingAST(const std::string Name, ExprAST* Val) :
   Name(Name), Val(Val) {};
    
-const std::string& VarBindingAST::getName() const { 
+std::string VarBindingAST::getName() const { 
   return Name;  
 };
 
@@ -375,8 +375,19 @@ Value* ForExprAST::codegen(driver &drv) {
   builder->CreateBr(preheaderBB);
 
   addBlock(preheaderBB);
-  if (not init->codegen(drv)) return _logError("Error while creating preheader");
+  auto initRes = init->codegen(drv);
+  if (not initRes) return _logError("Error while creating preheader");
   builder->CreateBr(headerBB);
+
+  // Freeze scope
+  AllocaInst *prevInitScope = nullptr;
+  const std::string &initName = init->getName();
+  auto bindAlloca = dyn_cast<AllocaInst>(initRes);
+  const bool isInitBound = bindAlloca != nullptr;
+  if (isInitBound) {
+    prevInitScope = drv.NamedValues[initName];
+    drv.NamedValues[initName] = bindAlloca;
+  }
 
   addBlock(headerBB);
   Value *condVal = cond->codegen(drv);
@@ -391,6 +402,9 @@ Value* ForExprAST::codegen(driver &drv) {
   if (not assignment->codegen(drv))
     return _logError("Error while generating assignment");
   builder->CreateBr(headerBB);
+
+  // Restore scope
+  if (isInitBound) drv.NamedValues[initName] = prevInitScope;
 
   addBlock(exitBB);
 

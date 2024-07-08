@@ -66,7 +66,11 @@ public:
 
 
 class ExprAST : public RootAST {};
-class InitAST : public RootAST {};
+
+class InitAST : public RootAST {
+public:
+  virtual std::string getName() const = 0;
+};
 
 class NumberExprAST : public ExprAST {
 private:
@@ -136,7 +140,7 @@ private:
 public:
   VarBindingAST(const std::string Name, ExprAST* Val);
   AllocaInst *codegen(driver& drv) override;
-  const std::string& getName() const;
+  std::string getName() const override;
 };
 
 /// Function prototype.
@@ -188,7 +192,7 @@ public:
   AssignmentExprAST(const std::string &name, ExprAST *val) :
     name(name), val(val) {};
   Value* codegen(driver &drv) override;
-  std::string getName() const { return name; };
+  std::string getName() const override { return name; };
 };
 
 class ForExprAST : public ExprAST {
