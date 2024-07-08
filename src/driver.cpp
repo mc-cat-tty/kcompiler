@@ -142,8 +142,7 @@ Value* IfExprAST::codegen(driver& drv) {
   
   builder->SetInsertPoint(TrueBB);
   Value *TrueV = TrueExp->codegen(drv);
-  if (!TrueV)
-      return nullptr;
+  if (not TrueV) return nullptr;
   builder->CreateBr(MergeBB);  // Inconditionally branch to MergeBB
   
   // TrueBB could have generated some blocks in the middle
@@ -160,7 +159,6 @@ Value* IfExprAST::codegen(driver& drv) {
     
     builder->CreateBr(MergeBB);  // Inconditionally branch to MergeBB
     FalseBB = builder->GetInsertBlock();  // Get FalseBB position feedback
-    
   }
 
   function->insert(function->end(), MergeBB);
@@ -359,6 +357,42 @@ Value* AssignmentExprAST::codegen(driver &drv) {
 }
 
 Value* ForExprAST::codegen(driver &drv) {
+  auto *function = builder->GetInsertBlock()->getParent();
   
-  return nullptr;
+  auto addBlock = [&function] (BasicBlock *bb) -> void {
+    function->insert(function->end(), bb);
+    builder->SetInsertPoint(bb);
+  };
+  auto _logError = std::bind(logError, std::placeholders::_1, drv);
+
+  // Loop building blocks
+  auto *preheaderBB = BasicBlock::Create(*context, "preheader");
+  auto *headerBB = BasicBlock::Create(*context, "header");
+  auto *bodyBB = BasicBlock::Create(*context, "body");
+  auto *latchBB = BasicBlock::Create(*context, "latch");
+  auto *exitBB = BasicBlock::Create(*context, "exit");
+
+  builder->CreateBr(preheaderBB);
+
+  addBlock(preheaderBB);
+  if (not init->codegen(drv)) return _logError("Error while creating preheader");
+  builder->CreateBr(headerBB);
+
+  addBlock(headerBB);
+  Value *condVal = cond->codegen(drv);
+  if (not condVal) return _logError("Error while creating condition expression");
+  builder->CreateCondBr(condVal, bodyBB, exitBB);
+
+  addBlock(bodyBB);
+  if (not body->codegen(drv)) return _logError("Error while generating body");
+  builder->CreateBr(latchBB);
+
+  addBlock(latchBB);
+  if (not assignment->codegen(drv))
+    return _logError("Error while generating assignment");
+  builder->CreateBr(headerBB);
+
+  addBlock(exitBB);
+
+  return UndefValue::get(Type::getDoubleTy(*context));
 }
