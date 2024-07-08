@@ -207,4 +207,10 @@ public:
   Value* codegen(driver &d) override;
 };
 
+class UnaryExprAST : public BinaryExprAST {
+public:
+  UnaryExprAST(char Op, ExprAST* LHS) :
+    BinaryExprAST(Op, LHS, nullptr) {};
+};
+
 #endif // ! DRIVER_HH

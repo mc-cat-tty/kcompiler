@@ -2,6 +2,7 @@
 #include "parser.hpp"
 #include "utils.hpp"
 
+
 LLVMContext *context = new LLVMContext;
 Module *module = new Module("Kaleidoscope", *context);
 IRBuilder<> *builder = new IRBuilder(*context);
@@ -74,25 +75,35 @@ BinaryExprAST::BinaryExprAST(char Op, ExprAST* LHS, ExprAST* RHS) :
 
 Value *BinaryExprAST::codegen(driver& drv) {
   Value *L = LHS->codegen(drv);
-  Value *R = RHS->codegen(drv);
-  if (!L || !R) 
+  Value *R = nullptr;
+  if (RHS) R = RHS->codegen(drv);
+
+  if (!L || (R && !R)) 
     return nullptr;
   switch (Op) {
   case '+':
     return builder->CreateFAdd(L,R,"addres");
   case '-':
-    return builder->CreateFSub(L,R,"subres");
+    return builder->CreateFSub(L, R, "subres");
   case '*':
-    return builder->CreateFMul(L,R,"mulres");
+    return builder->CreateFMul(L, R, "mulres");
   case '/':
-    return builder->CreateFDiv(L,R,"addres");
+    return builder->CreateFDiv(L, R, "addres");
   case '<':
-    return builder->CreateFCmpULT(L,R,"lttest");
+    return builder->CreateFCmpULT(L, R, "lttest");
+  case '>':
+    return builder->CreateFCmpULT(R, L, "lttest");
   case '=':
-    return builder->CreateFCmpUEQ(L,R,"eqtest");
-  default:  
-    std::cout << Op << std::endl;
-    return logError("Operatore binario non supportato", drv);
+    return builder->CreateFCmpUEQ(L, R, "eqtest");
+  case '!':  // Logical not
+    return builder->CreateNot(L, "lnotres");
+  case '&':
+    return builder->CreateAnd(L, R, "landres");
+  case '|':
+    return builder->CreateOr(L, R, "lorres");
+  default:
+    using namespace std::string_literals;
+    return logError(std::to_string(Op) + " operatore binario non supportato", drv);
   }
 };
 

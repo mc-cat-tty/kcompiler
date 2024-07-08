@@ -26,6 +26,8 @@
   class ForExprAST;
   class IfExprAST;
   class InitAST;
+  class BinaryExprAST;
+  class UnaryExprAST;
 }
 
 %param { driver& drv }
@@ -53,6 +55,7 @@
   QMARK	     "?"
   COLON      ":"
   LT         "<"
+  GT         ">"
   EQ         "=="
   ASSIGN     "="
   LBRACE     "{"
@@ -64,6 +67,9 @@
   IF         "if"
   ELSE       "else"
   FOR        "for"
+  NOT        "not"
+  OR         "or"
+  AND        "and"
 ;
 
 %token <std::string> IDENTIFIER "id"
@@ -71,7 +77,6 @@
 %type <ExprAST*> exp
 %type <ExprAST*> idexp
 %type <IfExprAST*> expif
-%type <ExprAST*> condexp
 %type <std::vector<ExprAST*>> optexp
 %type <std::vector<ExprAST*>> explist
 %type <RootAST*> program
@@ -92,6 +97,9 @@
 %type <InitAST*> init
 %type <IfExprAST*> ifstmt
 %type <ForExprAST*> forstmt
+%type <BinaryExprAST*> relexp
+%type <BinaryExprAST*> condexp
+
 %%
 
 %start startsymb;
@@ -125,7 +133,10 @@ idseq:
   %empty                { $$ = std::vector<std::string>{}; }
 | "id" idseq            { $2.insert($2.begin(),$1); $$ = $2; };
 
-%left ":";
+%left ":", "?";
+%left "or";
+%left "and";
+%left "not";
 %left "<" "==";
 %left "+" "-";
 %left "*" "/";
@@ -184,7 +195,15 @@ expif:
   condexp "?" exp ":" exp       { $$ = new IfExprAST($1, $3, $5); };
 
 condexp:
+  relexp                        { $$ = $1; }
+| relexp "and" condexp          { $$ = new BinaryExprAST('&', $1, $3); }
+| relexp "or" condexp           { $$ = new BinaryExprAST('|', $1, $3); }
+| "not" condexp                 { $$ = new UnaryExprAST('!', $2); }
+| "(" condexp ")"               { $$ = $2; };
+
+relexp:
   exp "<" exp                   { $$ = new BinaryExprAST('<', $1, $3); }
+| exp ">" exp                   { $$ = new BinaryExprAST('>', $1, $3); }
 | exp "==" exp                  { $$ = new BinaryExprAST('=', $1, $3); };
 
 idexp:
