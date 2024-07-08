@@ -203,11 +203,11 @@ public:
 class AssignmentExprAST : public ExprAST, public InitAST {
 private:
   std::string name;
-  ExprAST *val;
+  ExprAST *val, *idxExpr;
 
 public:
-  AssignmentExprAST(const std::string &name, ExprAST *val) :
-    name(name), val(val) {};
+  AssignmentExprAST(const std::string &name, ExprAST *val, ExprAST *idx = nullptr) :
+    name(name), val(val), idxExpr(idxExpr) {};
   Value* codegen(driver &drv) override;
   std::string getName() const override { return name; };
 };

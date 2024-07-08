@@ -179,7 +179,7 @@ init:
 
 assignment:
   "id" "=" exp                  { $$ = new AssignmentExprAST($1, $3); }
-| "id" "[" exp "]" "=" exp      { $$ = new AssignmentExprAST($1, $3); };
+| "id" "[" exp "]" "=" exp      { $$ = new AssignmentExprAST($1, $6, $3); };
 
 block:
   "{" stmts "}"                 { $$ = new BlockExprAST({}, $2); }

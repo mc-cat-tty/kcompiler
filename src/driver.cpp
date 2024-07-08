@@ -403,23 +403,43 @@ GlobalVariable* GlobalVarAST::codegen(driver &drv) {
 
 Value* AssignmentExprAST::codegen(driver &drv) {
   auto maybeSymbol = tryGetSymbol(drv, name);
-  if (not maybeSymbol) return nullptr;
+  if (not maybeSymbol) return logError("Not defined variable", drv);
   auto symbol = *maybeSymbol;
 
   Value *v = val->codegen(drv);
   if (not v) return nullptr;
 
-  if (auto *A = std::get_if<AllocaInst*>(&symbol)) {
-    builder->CreateStore(v, *A);
+  if (not idxExpr) {  // Scalar
+    if (auto *A = std::get_if<AllocaInst*>(&symbol)) {
+      builder->CreateStore(v, *A);
+      return v;
+    }
+
+    if (auto *G = std::get_if<GlobalVariable*>(&symbol)) {
+      builder->CreateStore(v, *G);
+      return v;
+    }
+  }
+  else {  // Array
+    auto *idxVal = idxExpr->codegen(drv);
+    if (not idxVal) return logError("Cannot generate index val", drv);
+
+    // auto *symbolType = dyn_cast<ArrayType>(
+    //   (*A)->getAllocatedType()
+    // );
+    // if (not symbolType) return _logError("Unsupported slicing");
+
+    Value *elem;
+    if (auto *A = std::get_if<AllocaInst*>(&symbol))
+      elem = builder->CreateInBoundsGEP((*A)->getAllocatedType(), *A, toInt(idxVal));
+    if (auto *G = std::get_if<GlobalVariable*>(&symbol))
+      elem = builder->CreateInBoundsGEP((*G)->getType(), *G, toInt(idxVal));
+
+    builder->CreateStore(v, elem);
     return v;
   }
 
-  if (auto *G = std::get_if<GlobalVariable*>(&symbol)) {
-    builder->CreateStore(v, *G);
-    return v;
-  }
-
-  return nullptr;
+  return logError("Error in assignment expression", drv);;
 }
 
 Value* ForExprAST::codegen(driver &drv) {
