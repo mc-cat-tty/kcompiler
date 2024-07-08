@@ -48,8 +48,8 @@ blank   [ \t]
 "="      return yy::parser::make_ASSIGN    (loc);
 "{"      return yy::parser::make_LBRACE    (loc);
 "}"      return yy::parser::make_RBRACE    (loc);
-"["      return yy::parser::make_LSBRACKED (loc);
-"]"      return yy::parser::make_RSBRACKED (loc);
+"["      return yy::parser::make_LSBRACKET (loc);
+"]"      return yy::parser::make_RSBRACKET (loc);
 
 {num}    { errno = 0;
            double n = strtod(yytext, NULL);

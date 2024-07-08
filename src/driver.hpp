@@ -89,7 +89,16 @@ private:
 public:
   VariableExprAST(const std::string &Name);
   lexval getLexVal() const override;
-  Value *codegen(driver& drv) override;
+  Value* codegen(driver& drv) override;
+};
+
+class SlicingExprAST : public VariableExprAST {
+private:
+  ExprAST* Idx;
+
+public:
+  SlicingExprAST(const std::string &Name, ExprAST *Idx) :
+    VariableExprAST(Name), Idx(Idx) {};
 };
 
 class BinaryExprAST : public ExprAST {
@@ -136,9 +145,13 @@ public:
 class VarBindingAST: public InitAST {
 private:
   const std::string Name;
+  unsigned Size;  ///< Size == 0 means scalar variable; Size > 0 for arrays
   ExprAST* Val;
+  std::vector<ExprAST*> Vals;
+
 public:
   VarBindingAST(const std::string Name, ExprAST* Val);
+  VarBindingAST(const std::string Name, std::vector<ExprAST*> Vals, unsigned Size);
   AllocaInst *codegen(driver& drv) override;
   std::string getName() const override;
 };

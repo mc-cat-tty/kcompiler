@@ -28,6 +28,7 @@
   class InitAST;
   class BinaryExprAST;
   class UnaryExprAST;
+  class SlicingExprAST;
 }
 
 %param { driver& drv }
@@ -101,6 +102,7 @@
 %type <ForExprAST*> forstmt
 %type <BinaryExprAST*> relexp
 %type <BinaryExprAST*> condexp
+%type <std::vector<ExprAST*>> vecinit
 
 %%
 
@@ -135,7 +137,7 @@ idseq:
   %empty                { $$ = std::vector<std::string>{}; }
 | "id" idseq            { $2.insert($2.begin(),$1); $$ = $2; };
 
-%left ":", "?";
+%left ":" "?";
 %left "or";
 %left "and";
 %left "not";
@@ -177,7 +179,7 @@ init:
 
 assignment:
   "id" "=" exp                  { $$ = new AssignmentExprAST($1, $3); }
-| "id" "[" exp "]" "=" exp      { TODO };
+| "id" "[" exp "]" "=" exp      { $$ = new AssignmentExprAST($1, $3); };
 
 block:
   "{" stmts "}"                 { $$ = new BlockExprAST({}, $2); }
@@ -188,13 +190,16 @@ vardefs:
 | vardefs ";" binding           { $1.push_back($3); $$ = $1; };
                             
 binding:
-  "var" "id" initexp                                { $$ = new VarBindingAST($2, $3); }
-| "var" "id" "[" "number" "]"                       { TODO }
-| "var" "id" "[" "number" "]" "=" "{" explist "}"   { TODO };
+  "var" "id" initexp                    { $$ = new VarBindingAST($2, $3); }
+| "var" "id" "[" "number" "]" vecinit   { $$ = new VarBindingAST($2, $6, $4); };
 
 initexp:
   %empty                        { $$ = nullptr; }
 | "=" exp                       { $$ = $2; };
+
+vecinit:
+  %empty                        { $$ = std::vector<ExprAST*>{}; }
+| "=" "{" explist "}"           { $$ = $3; };
 
 expif:
   condexp "?" exp ":" exp       { $$ = new IfExprAST($1, $3, $5); };
@@ -214,7 +219,7 @@ relexp:
 idexp:
   "id"                          { $$ = new VariableExprAST($1); }
 | "id" "(" optexp ")"           { $$ = new CallExprAST($1, $3); }
-| "id" "[" optexp "]"           { TODO };
+| "id" "[" exp "]"              { $$ = new SlicingExprAST($1, $3); };
 
 optexp:
   %empty                        { $$ = std::vector<ExprAST*>{}; }

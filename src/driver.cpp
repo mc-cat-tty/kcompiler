@@ -57,6 +57,8 @@ lexval VariableExprAST::getLexVal() const {
   return lval;
 };
 
+
+
 // Notice that NamedValues is the locally-defined symbol table
 Value *VariableExprAST::codegen(driver& drv) {
   auto maybeSymbol = tryGetSymbol(drv, Name);
@@ -227,7 +229,10 @@ Value* BlockExprAST::codegen(driver& drv) {
 
 
 VarBindingAST::VarBindingAST(const std::string Name, ExprAST* Val) :
-  Name(Name), Val(Val) {};
+  Name(Name), Val(Val), Vals({}), Size(0) {};
+
+VarBindingAST::VarBindingAST(const std::string Name, std::vector<ExprAST*> Vals, unsigned Size) :
+  Name(Name), Val(nullptr), Vals(Vals), Size(Size) {};
    
 std::string VarBindingAST::getName() const { 
   return Name;  
@@ -236,16 +241,49 @@ std::string VarBindingAST::getName() const {
 AllocaInst* VarBindingAST::codegen(driver& drv) {
   // Get current function to allocate memory in its activation record
   Function *fun = builder->GetInsertBlock()->getParent();
+  AllocaInst *Alloca = nullptr;
 
-  // Bindings without rhs can exist in order to shadow global vars
-  if (not Val) Val = new NumberExprAST(0);
+  if (Size == 0) {  // Scalar
+    // Bindings without rhs can exist in order to shadow global vars
+    if (not Val) Val = new NumberExprAST(0);
 
-  Value *BoundVal = Val->codegen(drv);  // Generate value
-  if (!BoundVal) return nullptr;
+    Value *BoundVal = Val->codegen(drv);  // Generate value
+    if (!BoundVal) logError("Failed to generate RHS expression for variable binding", drv);
 
-  AllocaInst *Alloca = CreateEntryBlockAlloca(fun, Name);
-  builder->CreateStore(BoundVal, Alloca);
-  
+    Alloca = CreateEntryBlockAlloca(fun, Name);
+    builder->CreateStore(BoundVal, Alloca);
+  }
+  else {  // Array
+    // Error checking
+    if (Size != Vals.size()) {
+      logWarning("Mismatching array and initializer list size", drv);
+      return nullptr;
+    }
+    
+    auto *arrayType = ArrayType::get(Type::getDoubleTy(*context), Size);
+    Alloca = CreateEntryBlockAlloca(
+      fun,
+      Name,
+      arrayType
+    );
+
+    for (unsigned i = 0; auto *initExp : Vals) {
+      auto *initVal = initExp->codegen(drv);
+      if (not initVal) logError(
+        "Failed to generate expression value for element" + std::to_string(i) + "of the initializer list",
+        drv
+      );
+
+      auto *elem = builder->CreateInBoundsGEP(
+        arrayType,
+        Alloca,
+        ConstantInt::get(*context, APInt(32, i))
+      );
+
+      ++i;
+    }
+  }
+
   return Alloca;
 };
 
@@ -344,7 +382,6 @@ GlobalVariable* GlobalVarAST::codegen(driver &drv) {
 
   return globalVar;
 };
-
 
 Value* AssignmentExprAST::codegen(driver &drv) {
   auto maybeSymbol = tryGetSymbol(drv, name);

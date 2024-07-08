@@ -39,9 +39,9 @@ Value *logError(const std::string msg, const driver& drv) {
   exit(1);
 }
 
-static AllocaInst *CreateEntryBlockAlloca(Function *fun, StringRef VarName) {
+static AllocaInst *CreateEntryBlockAlloca(Function *fun, StringRef varName, Type *varType = Type::getDoubleTy(*context)) {
   IRBuilder<> TmpB(&fun->getEntryBlock(), fun->getEntryBlock().begin());
-  return TmpB.CreateAlloca(Type::getDoubleTy(*context), nullptr, VarName);
+  return TmpB.CreateAlloca(varType, nullptr, varName);
 }
 
 // Utility data type that models a symbol retrieved either from the global
