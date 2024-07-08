@@ -84,7 +84,7 @@ Value* VariableExprAST::codegen(driver &drv, Value *idx) {
     if (not symbolType) return _logError("Unsupported slicing");
 
     // Get the referenced element
-    auto *e = builder->CreateInBoundsGEP(symbolType, *A, toInt(idx));
+    auto *e = builder->CreateInBoundsGEP(symbolType, *A, {builder->getInt32(0), toInt(idx)});
     return builder->CreateLoad(symbolType->getElementType(), e, Name.c_str());
   }
 
@@ -293,7 +293,7 @@ AllocaInst* VarBindingAST::codegen(driver& drv) {
       auto *elem = builder->CreateInBoundsGEP(
         arrayType,
         Alloca,
-        ConstantInt::get(*context, APInt(32, i))
+        {builder->getInt32(0), ConstantInt::get(*context, APInt(32, i))}
       );
 
       builder->CreateStore(initVal, elem);
@@ -443,9 +443,9 @@ Value* AssignmentExprAST::codegen(driver &drv) {
 
     Value *elem;
     if (auto *A = std::get_if<AllocaInst*>(&symbol))
-      elem = builder->CreateInBoundsGEP((*A)->getAllocatedType(), *A, toInt(idxVal));
+      elem = builder->CreateInBoundsGEP((*A)->getAllocatedType(), *A, {builder->getInt32(0), toInt(idxVal)});
     if (auto *G = std::get_if<GlobalVariable*>(&symbol))
-      elem = builder->CreateInBoundsGEP((*G)->getType(), *G, toInt(idxVal));
+      elem = builder->CreateInBoundsGEP((*G)->getType(), *G, {builder->getInt32(0), toInt(idxVal)});
 
     builder->CreateStore(v, elem);
     return v;
