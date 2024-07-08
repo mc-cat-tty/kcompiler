@@ -70,6 +70,8 @@
   NOT        "not"
   OR         "or"
   AND        "and"
+  LSBRACKET  "["
+  RSBRACKET  "]" 
 ;
 
 %token <std::string> IDENTIFIER "id"
@@ -174,7 +176,8 @@ init:
 | assignment                    { $$ = $1; };
 
 assignment:
-  "id" "=" exp                  { $$ = new AssignmentExprAST($1, $3); };
+  "id" "=" exp                  { $$ = new AssignmentExprAST($1, $3); }
+| "id" "[" exp "]" "=" exp      { TODO };
 
 block:
   "{" stmts "}"                 { $$ = new BlockExprAST({}, $2); }
@@ -185,7 +188,9 @@ vardefs:
 | vardefs ";" binding           { $1.push_back($3); $$ = $1; };
                             
 binding:
-  "var" "id" initexp            { $$ = new VarBindingAST($2, $3); };
+  "var" "id" initexp                                { $$ = new VarBindingAST($2, $3); }
+| "var" "id" "[" "number" "]"                       { TODO }
+| "var" "id" "[" "number" "]" "=" "{" explist "}"   { TODO };
 
 initexp:
   %empty                        { $$ = nullptr; }
@@ -208,7 +213,8 @@ relexp:
 
 idexp:
   "id"                          { $$ = new VariableExprAST($1); }
-| "id" "(" optexp ")"           { $$ = new CallExprAST($1, $3); };
+| "id" "(" optexp ")"           { $$ = new CallExprAST($1, $3); }
+| "id" "[" optexp "]"           { TODO };
 
 optexp:
   %empty                        { $$ = std::vector<ExprAST*>{}; }

@@ -32,6 +32,7 @@ Value *logWarning(const std::string msg, const driver& drv) {
   return nullptr;
 }
 
+// Semantic error
 Value *logError(const std::string msg, const driver& drv) {
   std::cout << "Error: ";
   logWarning(msg, drv);

@@ -48,6 +48,8 @@ blank   [ \t]
 "="      return yy::parser::make_ASSIGN    (loc);
 "{"      return yy::parser::make_LBRACE    (loc);
 "}"      return yy::parser::make_RBRACE    (loc);
+"["      return yy::parser::make_LSBRACKED (loc);
+"]"      return yy::parser::make_RSBRACKED (loc);
 
 {num}    { errno = 0;
            double n = strtod(yytext, NULL);
@@ -71,7 +73,7 @@ blank   [ \t]
 {id}     { return yy::parser::make_IDENTIFIER (yytext, loc); }
 
 .        { throw yy::parser::syntax_error
-               (loc, "invalid character: " + std::string(yytext));
+            (loc, "invalid character: " + std::string(yytext));
          }
          
 <<EOF>>  { return yy::parser::make_END (loc); }
