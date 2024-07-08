@@ -49,12 +49,18 @@ static AllocaInst *CreateEntryBlockAlloca(Function *fun, StringRef varName, Type
 using MaybeSymbol = std::optional<std::variant<GlobalVariable*, AllocaInst*>>;
 
 MaybeSymbol tryGetSymbol(driver &drv, const std::string &name) {
+  // Notice that NamedValues is the locally-defined symbol table
   AllocaInst *A = drv.NamedValues[name];
   GlobalVariable *G = module->getNamedGlobal(name);
 
   if (A) return A;
   if (G) return G;
 
-  logError("Variabile " + name + " non definita", drv);
+  logWarning("Variabile " + name + " non definita", drv);
   return std::nullopt;
+}
+
+Value* toInt(Value *v) {
+  Value *floatVal = builder->CreateFPTrunc(v, Type::getFloatTy(*context));
+  return builder->CreateFPToSI(floatVal, Type::getInt32Ty(*context));
 }

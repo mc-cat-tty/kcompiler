@@ -85,20 +85,24 @@ public:
 class VariableExprAST : public ExprAST {
 private:
   std::string Name;
+
+protected:
+  Value* codegen(driver& drv, Value *idx);
   
 public:
   VariableExprAST(const std::string &Name);
   lexval getLexVal() const override;
-  Value* codegen(driver& drv) override;
+  Value* codegen(driver& drv) override { return VariableExprAST::codegen(drv, nullptr); };
 };
 
 class SlicingExprAST : public VariableExprAST {
 private:
-  ExprAST* Idx;
+  ExprAST* IdxExpr;
 
 public:
-  SlicingExprAST(const std::string &Name, ExprAST *Idx) :
-    VariableExprAST(Name), Idx(Idx) {};
+  SlicingExprAST(const std::string &Name, ExprAST *IdxExpr) :
+    VariableExprAST(Name), IdxExpr(IdxExpr) {};
+  Value* codegen(driver &drv) override;
 };
 
 class BinaryExprAST : public ExprAST {

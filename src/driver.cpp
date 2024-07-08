@@ -57,20 +57,39 @@ lexval VariableExprAST::getLexVal() const {
   return lval;
 };
 
+Value* SlicingExprAST::codegen(driver &drv) {
+  auto *idxVal = IdxExpr->codegen(drv);
+  if (not idxVal) return logError("Error while generating index expression", drv);
 
-
-// Notice that NamedValues is the locally-defined symbol table
-Value *VariableExprAST::codegen(driver& drv) {
-  auto maybeSymbol = tryGetSymbol(drv, Name);
-  if (not maybeSymbol) return nullptr;
-
-  auto symbol = *maybeSymbol;
-  if (auto *A = std::get_if<AllocaInst*>(&symbol)) return builder->CreateLoad((*A)->getAllocatedType(), *A, Name.c_str());
-  if (auto *G = std::get_if<GlobalVariable*>(&symbol)) return builder->CreateLoad((*G)->getValueType(), *G, Name.c_str());
-
-  return nullptr;
+  return VariableExprAST::codegen(drv, idxVal);
 }
 
+Value* VariableExprAST::codegen(driver &drv, Value *idx) {
+  auto _logError = std::bind(logError, std::placeholders::_1, drv);
+  auto maybeSymbol = tryGetSymbol(drv, Name);
+  if (not maybeSymbol) return _logError("Symbol not found");
+
+  auto symbol = *maybeSymbol;
+  if (not idx) {  // Scalar
+    if (auto *A = std::get_if<AllocaInst*>(&symbol)) return builder->CreateLoad((*A)->getAllocatedType(), *A, Name.c_str());
+    if (auto *G = std::get_if<GlobalVariable*>(&symbol)) return builder->CreateLoad((*G)->getValueType(), *G, Name.c_str());
+  }
+  else {  // Array
+    auto *A = std::get_if<AllocaInst*>(&symbol);
+    if (not A) return _logError("Array not found");
+
+    auto *symbolType = dyn_cast<ArrayType>(
+      (*A)->getAllocatedType()
+    );
+    if (not symbolType) return _logError("Unsupported slicing");
+
+    // Get the referenced element
+    auto *e = builder->CreateInBoundsGEP(symbolType, *A, toInt(idx));
+    return builder->CreateLoad(symbolType->getElementType(), e, Name.c_str());
+  }
+
+  return _logError("Symbol not suitable");
+}
 
 BinaryExprAST::BinaryExprAST(char Op, ExprAST* LHS, ExprAST* RHS) :
   Op(Op), LHS(LHS), RHS(RHS) {};
@@ -250,29 +269,34 @@ AllocaInst* VarBindingAST::codegen(driver& drv) {
     Value *BoundVal = Val->codegen(drv);  // Generate value
     if (!BoundVal) logError("Failed to generate RHS expression for variable binding", drv);
 
-    Alloca = CreateEntryBlockAlloca(fun, Name);
+    Alloca = CreateEntryBlockAlloca(fun, this->getName());
     builder->CreateStore(BoundVal, Alloca);
   }
   else {  // Array
     auto *arrayType = ArrayType::get(Type::getDoubleTy(*context), Size);
     Alloca = CreateEntryBlockAlloca(
       fun,
-      Name,
+      this->getName(),
       arrayType
     );
 
-    for (unsigned i = 0; auto *initExp : Vals) {
-      auto *initVal = initExp->codegen(drv);
-      if (not initVal) logError(
-        "Failed to generate expression value for element" + std::to_string(i) + "of the initializer list",
-        drv
-      );
+    for (int i = 0; auto *initExpr : Vals) {
+      auto *initVal = initExpr->codegen(drv);
+      if (not initVal) {
+        logError(
+          "Failed to generate expression value for element" + std::to_string(i) + "of the initializer list",
+          drv
+        );
+        return nullptr;
+      }
 
       auto *elem = builder->CreateInBoundsGEP(
         arrayType,
         Alloca,
         ConstantInt::get(*context, APInt(32, i))
       );
+
+      builder->CreateStore(initVal, elem);
 
       ++i;
     }
