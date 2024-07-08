@@ -387,12 +387,24 @@ Function *FunctionAST::codegen(driver& drv) {
 
 
 GlobalVariable* GlobalVarAST::codegen(driver &drv) {
+  Type *t;
+  Constant *init;
+  if (size == 0) {
+    t = Type::getDoubleTy(*context);
+    init = ConstantFP::getZero(Type::getDoubleTy(*context));
+  }
+  else {
+    t = ArrayType::get(Type::getDoubleTy(*context), size);
+    init = ConstantFP::getNullValue(t);
+  }
+
+
   auto *globalVar = new GlobalVariable(
     *module,
-    Type::getDoubleTy(*context),
+    t,
     false,  // Not constant
     GlobalValue::LinkageTypes::CommonLinkage,
-    ConstantFP::getZero(Type::getDoubleTy(*context)),
+    init,
     name
   );
 
@@ -407,7 +419,7 @@ Value* AssignmentExprAST::codegen(driver &drv) {
   auto symbol = *maybeSymbol;
 
   Value *v = val->codegen(drv);
-  if (not v) return nullptr;
+  if (not v) return logError("Failed to create assignment val", drv);
 
   if (not idxExpr) {  // Scalar
     if (auto *A = std::get_if<AllocaInst*>(&symbol)) {

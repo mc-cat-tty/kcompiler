@@ -122,7 +122,8 @@ top:
 | definition            { $$ = $1; };
 
 globalvar:
-  "global" "id"         { $$ = new GlobalVarAST($2); };
+  "global" "id"                   { $$ = new GlobalVarAST($2); }
+| "global" "id" "[" "number" "]"  { $$ = new GlobalVarAST($2, $4); };
 
 external:
   "extern" proto        { $$ = $2; };

@@ -193,9 +193,11 @@ public:
 class GlobalVarAST : public RootAST {
 private:
   std::string name;
+  unsigned size;
 
 public:
-  GlobalVarAST(const std::string &name) : name(name) {};
+  GlobalVarAST(const std::string &name) : name(name), size(0) {};
+  GlobalVarAST(const std::string &name, unsigned size) : name(name), size(size) {};
   GlobalVariable* codegen(driver &drv) override;
   std::string getName() const { return name; };
 };
@@ -206,7 +208,7 @@ private:
   ExprAST *val, *idxExpr;
 
 public:
-  AssignmentExprAST(const std::string &name, ExprAST *val, ExprAST *idx = nullptr) :
+  AssignmentExprAST(const std::string &name, ExprAST *val, ExprAST *idxExpr = nullptr) :
     name(name), val(val), idxExpr(idxExpr) {};
   Value* codegen(driver &drv) override;
   std::string getName() const override { return name; };

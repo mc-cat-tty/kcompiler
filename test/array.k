@@ -1,6 +1,9 @@
 def f() {
-  var res = 10;
+  var res = 0;
   var v[5] = {1, 2, 3, 4, 5};
 
-  v[4]
+  for (var i=0; i<5; i = i+1) v[i] = 1;
+  for (var i=0; i<5; i = i+1) res = res + v[i];
+  
+  res
 };
