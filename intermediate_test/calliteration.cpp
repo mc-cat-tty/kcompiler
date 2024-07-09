@@ -4,6 +4,6 @@ extern "C" double f(double num);
 
 int main() {
   double num = 10;
-  std::cout << f(num) << std::endl;
+  std::cout << "Little Gauss formula of 10: " << f(num) << std::endl;
   return 0;
 }

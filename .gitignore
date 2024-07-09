@@ -9,3 +9,4 @@ scanner.cpp
 *.o
 *.bc
 *.ll
+*.s

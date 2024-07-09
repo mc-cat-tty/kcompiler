@@ -1,5 +1,6 @@
 extern sqrt(x);
 extern printval(x1 x2 flag);
+
 def eqn2(a b c) {
    var delta2 = b*b-4*a*c;
    if (delta2<0) {

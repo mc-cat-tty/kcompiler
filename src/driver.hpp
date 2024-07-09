@@ -232,4 +232,30 @@ public:
     BinaryExprAST(Op, LHS, nullptr) {};
 };
 
+class UnaryIncrementAST : public AssignmentExprAST {
+public:
+  UnaryIncrementAST(const std::string &varName) :
+    AssignmentExprAST(
+      varName,
+      new BinaryExprAST(
+        '+',
+        new VariableExprAST(varName),
+        new NumberExprAST(1)
+      )
+    ) {};
+};
+
+class UnaryDecrementAST : public AssignmentExprAST {
+public:
+  UnaryDecrementAST(const std::string &varName) :
+    AssignmentExprAST(
+      varName,
+      new BinaryExprAST(
+        '-',
+        new VariableExprAST(varName),
+        new NumberExprAST(1)
+      )
+    ) {};
+};
+
 #endif // ! DRIVER_HH

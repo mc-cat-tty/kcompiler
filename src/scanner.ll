@@ -11,8 +11,8 @@
 %option noyywrap nounput batch debug noinput
 
 id      [a-zA-Z][a-zA-Z_0-9]*
-fpnum   -?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?
-fixnum  -?(0|[1-9][0-9]*)\.?[0-9]*
+fpnum   [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?
+fixnum  (0|[1-9][0-9]*)\.?[0-9]*
 num     {fpnum}|{fixnum}
 blank   [ \t]
 comment #.*$
@@ -34,6 +34,9 @@ comment #.*$
 [\n]+      loc.lines (yyleng); loc.step ();
 {comment}  loc.columns(yyleng); loc.step();
 
+
+"--"      return yy::parser::make_DECREMENT (loc);
+"++"      return yy::parser::make_INCREMENT (loc);
 "-"      return yy::parser::make_MINUS     (loc);
 "+"      return yy::parser::make_PLUS      (loc);
 "*"      return yy::parser::make_STAR      (loc);
@@ -52,8 +55,6 @@ comment #.*$
 "}"      return yy::parser::make_RBRACE    (loc);
 "["      return yy::parser::make_LSBRACKET (loc);
 "]"      return yy::parser::make_RSBRACKET (loc);
-"--"      return yy::parser::make_DECREMENT (loc);
-"++"      return yy::parser::make_INCREMENT (loc);
 
 {num}    { errno = 0;
            double n = strtod(yytext, NULL);

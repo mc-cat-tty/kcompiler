@@ -3,6 +3,7 @@ extern randk();
 extern timek();
 extern printval(x controlchar);
 global A[10];
+
 def inssort() {
    for (var i=1; i<10; ++i) {
        var pivot = A[i];
@@ -12,6 +13,7 @@ def inssort() {
        A[j+1] = pivot
     }
 };
+
 def main() {
   var seed = timek();
   randinit(seed);

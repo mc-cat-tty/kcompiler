@@ -2,16 +2,13 @@
 #include <ctime>
 
 extern "C" {
-    double timek();
-}
-
-extern "C" {
-    double printval(double, double);
+  double timek();
+  double printval(double, double);
 }
 
 double timek() {
-    std::time_t t = std::time(0);
-    return t;
+  std::time_t t = std::time(0);
+  return t;
 }
 
 double printval(double x, double controlchar) {

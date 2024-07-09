@@ -29,6 +29,8 @@
   class BinaryExprAST;
   class UnaryExprAST;
   class SlicingExprAST;
+  class UnaryIncrementAST;
+  class UnaryDecrementAST;
 }
 
 %param { driver& drv }
@@ -144,13 +146,15 @@ idseq:
 %left "or";
 %left "and";
 %left "not";
-%left "<" "==";
+%left "<" ">" "==";
 %left "+" "-";
 %left "*" "/";
+%nonassoc "--" "++";
 
 exp:
   exp "+" exp           { $$ = new BinaryExprAST('+', $1, $3); }
 | exp "-" exp           { $$ = new BinaryExprAST('-', $1, $3); }
+| "-" exp               { $$ = new BinaryExprAST('-', new NumberExprAST(0), $2); }
 | exp "*" exp           { $$ = new BinaryExprAST('*', $1, $3); }
 | exp "/" exp           { $$ = new BinaryExprAST('/', $1, $3); }
 | idexp                 { $$ = $1; }
@@ -183,24 +187,8 @@ init:
 assignment:
   "id" "=" exp                  { $$ = new AssignmentExprAST($1, $3); }
 | "id" "[" exp "]" "=" exp      { $$ = new AssignmentExprAST($1, $6, $3); }
-| "--" "id"                     { $$ = new AssignmentExprAST(
-                                    $2,
-                                    new BinaryExprAST(
-                                      '-',
-                                      new VariableExprAST($2),
-                                      new NumberExprAST(1)
-                                    )
-                                  );
-                                }
-| "++" "id"                     { $$ = new AssignmentExprAST(
-                                    $2,
-                                    new BinaryExprAST(
-                                      '+',
-                                      new VariableExprAST($2),
-                                      new NumberExprAST(1)
-                                    )
-                                  );
-                                };
+| "--" "id"                     { $$ = new UnaryDecrementAST($2); }
+| "++" "id"                     { $$ = new UnaryIncrementAST($2); };
 
 block:
   "{" stmts "}"                 { $$ = new BlockExprAST({}, $2); }
