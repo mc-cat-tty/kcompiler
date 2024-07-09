@@ -75,17 +75,17 @@ Value* VariableExprAST::codegen(driver &drv, Value *idx) {
     if (auto *G = std::get_if<GlobalVariable*>(&symbol)) return builder->CreateLoad((*G)->getValueType(), *G, Name.c_str());
   }
   else {  // Array
-    auto *A = std::get_if<AllocaInst*>(&symbol);
-    if (not A) return _logError("Array not found");
+    auto *symbolType = dyn_cast<ArrayType>(getSymbolType(symbol));
+    if (not symbolType) return logError("Unsupported slicing", drv);
 
-    auto *symbolType = dyn_cast<ArrayType>(
-      (*A)->getAllocatedType()
-    );
-    if (not symbolType) return _logError("Unsupported slicing");
+    Value *elem;
+    if (auto *A = std::get_if<AllocaInst*>(&symbol))
+      elem = builder->CreateInBoundsGEP(symbolType, *A, {builder->getInt32(0), toInt(idx)});
+    
+    if (auto *G = std::get_if<GlobalVariable*>(&symbol))
+      elem = builder->CreateInBoundsGEP(symbolType, *G, {builder->getInt32(0), toInt(idx)});
 
-    // Get the referenced element
-    auto *e = builder->CreateInBoundsGEP(symbolType, *A, {builder->getInt32(0), toInt(idx)});
-    return builder->CreateLoad(symbolType->getElementType(), e, Name.c_str());
+    return builder->CreateLoad(symbolType->getElementType(), elem, Name.c_str());
   }
 
   return _logError("Symbol not suitable");
@@ -433,17 +433,17 @@ Value* AssignmentExprAST::codegen(driver &drv) {
     }
   }
   else {  // Array
-    auto *idxVal = idxExpr->codegen(drv);
+    auto *idxVal = toInt(idxExpr->codegen(drv));
     if (not idxVal) return logError("Cannot generate index val", drv);
 
     if (not isa<ArrayType>(getSymbolType(symbol))) return logError("Unsupported slicing", drv);
 
     Value *elem;
     if (auto *A = std::get_if<AllocaInst*>(&symbol))
-      elem = builder->CreateInBoundsGEP((*A)->getAllocatedType(), *A, {builder->getInt32(0), toInt(idxVal)});
+      elem = builder->CreateInBoundsGEP(getSymbolType(symbol), *A, {builder->getInt32(0), idxVal});
     
     if (auto *G = std::get_if<GlobalVariable*>(&symbol))
-      elem = builder->CreateInBoundsGEP((*G)->getType(), *G, {builder->getInt32(0), toInt(idxVal)});
+      elem = builder->CreateInBoundsGEP(getSymbolType(symbol), *G, {builder->getInt32(0), idxVal});
 
     builder->CreateStore(v, elem);
     return v;
