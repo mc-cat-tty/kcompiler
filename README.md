@@ -27,7 +27,7 @@ Installation on MacOS is not straightforward as it may seem.
 ### Configuration
 Replace `LLVM16_INCLUDE_PATH` variable, placed in `src/Makefile`, with the right path for your system.
 
-## Usage
+## Usage
 ```bash
 make all
 ```
