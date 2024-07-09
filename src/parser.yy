@@ -72,7 +72,9 @@
   OR         "or"
   AND        "and"
   LSBRACKET  "["
-  RSBRACKET  "]" 
+  RSBRACKET  "]"
+  DECREMENT  "--"
+  INCREMENT  "++"
 ;
 
 %token <std::string> IDENTIFIER "id"
@@ -180,7 +182,25 @@ init:
 
 assignment:
   "id" "=" exp                  { $$ = new AssignmentExprAST($1, $3); }
-| "id" "[" exp "]" "=" exp      { $$ = new AssignmentExprAST($1, $6, $3); };
+| "id" "[" exp "]" "=" exp      { $$ = new AssignmentExprAST($1, $6, $3); }
+| "--" "id"                     { $$ = new AssignmentExprAST(
+                                    $2,
+                                    new BinaryExprAST(
+                                      '-',
+                                      new VariableExprAST($2),
+                                      new NumberExprAST(1)
+                                    )
+                                  );
+                                }
+| "++" "id"                     { $$ = new AssignmentExprAST(
+                                    $2,
+                                    new BinaryExprAST(
+                                      '+',
+                                      new VariableExprAST($2),
+                                      new NumberExprAST(1)
+                                    )
+                                  );
+                                };
 
 block:
   "{" stmts "}"                 { $$ = new BlockExprAST({}, $2); }

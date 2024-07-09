@@ -52,6 +52,8 @@ comment #.*$
 "}"      return yy::parser::make_RBRACE    (loc);
 "["      return yy::parser::make_LSBRACKET (loc);
 "]"      return yy::parser::make_RSBRACKET (loc);
+"--"      return yy::parser::make_DECREMENT (loc);
+"++"      return yy::parser::make_INCREMENT (loc);
 
 {num}    { errno = 0;
            double n = strtod(yytext, NULL);
