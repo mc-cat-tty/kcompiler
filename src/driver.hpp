@@ -151,11 +151,11 @@ private:
   const std::string Name;
   unsigned Size;  ///< Size == 0 means scalar variable; Size > 0 for arrays
   ExprAST* Val;
-  std::vector<ExprAST*> Vals;
+  std::vector<ExprAST*> InitializerList;
 
 public:
   VarBindingAST(const std::string Name, ExprAST* Val);
-  VarBindingAST(const std::string Name, std::vector<ExprAST*> Vals, unsigned Size);
+  VarBindingAST(const std::string Name, std::vector<ExprAST*> InitializerList, unsigned Size);
   AllocaInst *codegen(driver& drv) override;
   std::string getName() const override;
 };

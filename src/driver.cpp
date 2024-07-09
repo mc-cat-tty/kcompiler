@@ -248,10 +248,10 @@ Value* BlockExprAST::codegen(driver& drv) {
 
 
 VarBindingAST::VarBindingAST(const std::string Name, ExprAST* Val) :
-  Name(Name), Val(Val), Vals({}), Size(0) {};
+  Name(Name), Val(Val), InitializerList({}), Size(0) {};
 
-VarBindingAST::VarBindingAST(const std::string Name, std::vector<ExprAST*> Vals, unsigned Size) :
-  Name(Name), Val(nullptr), Vals(Vals), Size(Size) {};
+VarBindingAST::VarBindingAST(const std::string Name, std::vector<ExprAST*> InitializerList, unsigned Size) :
+  Name(Name), Val(nullptr), InitializerList(InitializerList), Size(Size) {};
    
 std::string VarBindingAST::getName() const { 
   return Name;  
@@ -280,8 +280,8 @@ AllocaInst* VarBindingAST::codegen(driver& drv) {
       arrayType
     );
 
-    for (int i = 0; auto *initExpr : Vals) {
-      auto *initVal = initExpr->codegen(drv);
+    for (int i = 0; i < Size; ++i) {
+      auto *initVal = InitializerList[i]->codegen(drv);
       if (not initVal) {
         logError(
           "Failed to generate expression value for element" + std::to_string(i) + "of the initializer list",
@@ -297,9 +297,11 @@ AllocaInst* VarBindingAST::codegen(driver& drv) {
       );
 
       builder->CreateStore(initVal, elem);
-
-      ++i;
     }
+
+    using namespace std::string_literals;
+    if (InitializerList.size() < Size) logWarning("Uninitialized elements of "s + this->getName(), drv);
+    if (InitializerList.size() > Size) logWarning("Initializer list longer than array "s + this->getName(), drv);
   }
 
   return Alloca;
