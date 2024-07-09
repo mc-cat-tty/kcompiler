@@ -15,6 +15,7 @@ fpnum   -?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?
 fixnum  -?(0|[1-9][0-9]*)\.?[0-9]*
 num     {fpnum}|{fixnum}
 blank   [ \t]
+comment #.*$
 
 %{
   // Code executed at every regex match:
@@ -31,6 +32,7 @@ blank   [ \t]
 
 {blank}+   loc.step ();
 [\n]+      loc.lines (yyleng); loc.step ();
+{comment}  loc.columns(yyleng); loc.step();
 
 "-"      return yy::parser::make_MINUS     (loc);
 "+"      return yy::parser::make_PLUS      (loc);
