@@ -18,7 +18,7 @@ In addition to these features, also inline comments are allowed with the followi
  - `clang` compiler toolchain
  - `LLVM 16` library (installable with `apt install llvm-16`, `brew install llvm@16`, etc.)
 
-### MacOS Installation
+### MacOS Installation
 Installation on MacOS is not straightforward as it may seem.
  - `flex` shipped with the default Xcode SDK
  - `M4` same thing in principle but didn't work for me. Solution: unlink M4 with brew, reinstall and force relink
@@ -34,7 +34,7 @@ make all
 ```
 Running this command in the top-level directory will provide you `kcomp` compiler, able to translate Kaleidoscope sources into LLVM IR files.
 
-## Intermediate Test
+### Intermediate Test
 > Partial test are tests used by me during the development of this project as partial steps towards the final version.
 
 ```bash
@@ -46,7 +46,7 @@ If you wish to create new test, let assume named `foo`, keep into account that t
   - A Kaleidoscope source: `foo.k`
   - A C++ sources that provides at least the `int main(...)` function and wraps Kaleidoscope code to allow execution, input and output: `callfoo.cpp`
 
-## Test
+### Test
 > Tests placed in the `test/` folder are used for the final examination; they constitute the working set of Kaleidoscope programs to deem grammar - from L1 to L4 - properly implemented.
 
 
