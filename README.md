@@ -1,8 +1,7 @@
 # Kaleidoscope Compiler
 
 ## Overview
-Implementation of a Kaleidoscope compiler front-end. Grammars from L1 to L4 have been implemented:
- 0. The base project has been provided by the course Lecturers. The following steps are built on top of that base
+Implementation of a Kaleidoscope compiler front-end. Grammars from L1 to L4 have been implemented; the base project has been provided by the course lecturers. The following steps are built on top of that base
  1. Global variables and statements are introduced
  2. If and for expressions are introduced
  3. Greater than operator introduced, as well ass boolean expressions
