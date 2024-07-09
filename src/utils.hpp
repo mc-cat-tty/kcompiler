@@ -46,7 +46,8 @@ static AllocaInst *CreateEntryBlockAlloca(Function *fun, StringRef varName, Type
 
 // Utility data type that models a symbol retrieved either from the global
 // namespace or from the symbol table.
-using MaybeSymbol = std::optional<std::variant<GlobalVariable*, AllocaInst*>>;
+using Symbol = std::variant<GlobalVariable*, AllocaInst*>;
+using MaybeSymbol = std::optional<Symbol>;
 
 MaybeSymbol tryGetSymbol(driver &drv, const std::string &name) {
   // Notice that NamedValues is the locally-defined symbol table
@@ -63,4 +64,10 @@ MaybeSymbol tryGetSymbol(driver &drv, const std::string &name) {
 Value* toInt(Value *v) {
   Value *floatVal = builder->CreateFPTrunc(v, Type::getFloatTy(*context));
   return builder->CreateFPToSI(floatVal, Type::getInt32Ty(*context));
+}
+
+Type *getSymbolType(const Symbol &s) {
+  return std::holds_alternative<AllocaInst*>(s) ?
+    std::get<AllocaInst*>(s)->getAllocatedType() :
+    std::get<GlobalVariable*>(s)->getValueType();
 }

@@ -118,9 +118,9 @@ Value *BinaryExprAST::codegen(driver& drv) {
     return builder->CreateFCmpUEQ(L, R, "eqtest");
   case '!':  // Logical not
     return builder->CreateNot(L, "lnotres");
-  case '&':
+  case '&':  // Logical and
     return builder->CreateAnd(L, R, "landres");
-  case '|':
+  case '|':  // Logical or
     return builder->CreateOr(L, R, "lorres");
   default:
     using namespace std::string_literals;
@@ -436,14 +436,12 @@ Value* AssignmentExprAST::codegen(driver &drv) {
     auto *idxVal = idxExpr->codegen(drv);
     if (not idxVal) return logError("Cannot generate index val", drv);
 
-    // auto *symbolType = dyn_cast<ArrayType>(
-    //   (*A)->getAllocatedType()
-    // );
-    // if (not symbolType) return _logError("Unsupported slicing");
+    if (not isa<ArrayType>(getSymbolType(symbol))) return logError("Unsupported slicing", drv);
 
     Value *elem;
     if (auto *A = std::get_if<AllocaInst*>(&symbol))
       elem = builder->CreateInBoundsGEP((*A)->getAllocatedType(), *A, {builder->getInt32(0), toInt(idxVal)});
+    
     if (auto *G = std::get_if<GlobalVariable*>(&symbol))
       elem = builder->CreateInBoundsGEP((*G)->getType(), *G, {builder->getInt32(0), toInt(idxVal)});
 
