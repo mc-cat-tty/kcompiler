@@ -18,6 +18,13 @@ In addition to these features, also inline comments are allowed with the followi
  - `clang` compiler toolchain
  - `LLVM 16` library (installable with `apt install llvm-16`, `brew install llvm@16`, etc.)
 
+### MacOS Installation
+Installation on MacOS is not straightforward as it may seem.
+ - `flex` shipped with the default Xcode SDK
+ - `M4` same thing in principle but didn't work for me. Solution: unlink M4 with brew, reinstall and force relink
+ - `bison` shipped by default, but wrong version. Unlink and force relink to get version 3.2
+ - `llvm` as showed above
+
 ### Configuration
 Replace `LLVM16_INCLUDE_PATH` variable, placed in `src/Makefile`, with the right path for your system.
 
