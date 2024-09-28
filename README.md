@@ -49,7 +49,7 @@ If you wish to create a new test, let assume named `foo`, keep into account that
 > Tests placed in the `test/` folder are used for the final examination; they constitute the working set of Kaleidoscope programs to deem grammar - from L1 to L4 - is properly implemented.
 
 
-They can be run as above via a `make` target:
+They can be run via `make`:
 ```bash
-make teset insort
+make test insort
 ```
