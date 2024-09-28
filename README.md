@@ -41,15 +41,15 @@ make intermediate_test ezfibo
 ```
 Executes the test passed as argument.
 
-If you wish to create new test, let assume named `foo`, keep into account that this test utility expects two files to be present in `test/` directory:
+If you wish to create a new test, let assume named `foo`, keep into account that this test utility expects two files to be present in `test/` directory:
   - A Kaleidoscope source: `foo.k`
-  - A C++ sources that provides at least the `int main(...)` function and wraps Kaleidoscope code to allow execution, input and output: `callfoo.cpp`
+  - A C++ source that provides at least the `int main(...)` function and wraps Kaleidoscope code to allow execution, input and output: `callfoo.cpp`
 
 ### Test
-> Tests placed in the `test/` folder are used for the final examination; they constitute the working set of Kaleidoscope programs to deem grammar - from L1 to L4 - properly implemented.
+> Tests placed in the `test/` folder are used for the final examination; they constitute the working set of Kaleidoscope programs to deem grammar - from L1 to L4 - is properly implemented.
 
 
-The can be run as above through a `make` target:
+They can be run as above via a `make` target:
 ```bash
 make teset insort
 ```
